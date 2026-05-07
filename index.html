@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>生日管家</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark">日</div>
+          <div>
+            <h1>生日管家</h1>
+            <p>公历、农历生日提醒与日历导出</p>
+          </div>
+        </div>
+
+        <nav class="nav-tabs" aria-label="主要功能">
+          <button class="nav-tab active" data-view="dashboard" type="button">总览</button>
+          <button class="nav-tab" data-view="people" type="button">生日</button>
+          <button class="nav-tab" data-view="calendar" type="button">日历</button>
+          <button class="nav-tab" data-view="convert" type="button">查询</button>
+        </nav>
+
+        <div class="sidebar-panel">
+          <span class="panel-label">本地数据</span>
+          <p>资料保存在当前浏览器。导出的 `.ics` 文件可导入 Google Calendar、Apple Calendar、Outlook 等工具。</p>
+        </div>
+      </aside>
+
+      <main class="main">
+        <section id="dashboard" class="view active" aria-labelledby="dashboard-title">
+          <div class="toolbar">
+            <div>
+              <p class="eyebrow">Upcoming</p>
+              <h2 id="dashboard-title">近期生日</h2>
+            </div>
+            <div class="toolbar-actions">
+              <button id="requestNotifyBtn" class="secondary" type="button">开启浏览器提醒</button>
+              <button id="exportAllBtn" class="primary" type="button">导出未来 10 年</button>
+            </div>
+          </div>
+
+          <div class="stats-grid">
+            <div class="metric">
+              <span class="metric-label">已保存</span>
+              <strong id="totalPeople">0</strong>
+              <span>位亲友</span>
+            </div>
+            <div class="metric">
+              <span class="metric-label">30 天内</span>
+              <strong id="nextThirty">0</strong>
+              <span>个生日</span>
+            </div>
+            <div class="metric">
+              <span class="metric-label">今天</span>
+              <strong id="todayCount">0</strong>
+              <span>个提醒</span>
+            </div>
+          </div>
+
+          <div id="upcomingList" class="upcoming-list"></div>
+        </section>
+
+        <section id="people" class="view" aria-labelledby="people-title">
+          <div class="toolbar">
+            <div>
+              <p class="eyebrow">Birthdays</p>
+              <h2 id="people-title">生日资料</h2>
+            </div>
+          </div>
+
+          <div class="split-layout">
+            <form id="birthdayForm" class="editor" autocomplete="off">
+              <input id="personId" type="hidden" />
+              <label>
+                姓名
+                <input id="nameInput" name="name" required placeholder="例如：妈妈" />
+              </label>
+
+              <div class="segmented" role="radiogroup" aria-label="生日类型">
+                <label>
+                  <input type="radio" name="birthdayType" value="solar" checked />
+                  <span>公历</span>
+                </label>
+                <label>
+                  <input type="radio" name="birthdayType" value="lunar" />
+                  <span>农历</span>
+                </label>
+              </div>
+
+              <div class="form-grid">
+                <label>
+                  月
+                  <select id="monthInput" required></select>
+                </label>
+                <label>
+                  日
+                  <select id="dayInput" required></select>
+                </label>
+              </div>
+
+              <label id="leapMonthLabel" class="checkbox-row hidden">
+                <input id="leapMonthInput" type="checkbox" />
+                <span>闰月生日</span>
+              </label>
+
+              <label>
+                提前提醒
+                <select id="reminderInput">
+                  <option value="0">当天</option>
+                  <option value="1">提前 1 天</option>
+                  <option value="3" selected>提前 3 天</option>
+                  <option value="7">提前 7 天</option>
+                  <option value="14">提前 14 天</option>
+                  <option value="30">提前 30 天</option>
+                </select>
+              </label>
+
+              <label>
+                备注
+                <textarea id="noteInput" rows="3" placeholder="礼物偏好、称呼、重要年份等"></textarea>
+              </label>
+
+              <div class="editor-actions">
+                <button class="primary" type="submit">保存生日</button>
+                <button id="resetFormBtn" class="secondary" type="button">清空</button>
+              </div>
+            </form>
+
+            <div id="peopleList" class="people-list" aria-live="polite"></div>
+          </div>
+        </section>
+
+        <section id="calendar" class="view" aria-labelledby="calendar-title">
+          <div class="toolbar">
+            <div>
+              <p class="eyebrow">Calendar</p>
+              <h2 id="calendar-title">月历</h2>
+            </div>
+            <div class="month-controls">
+              <button id="prevMonthBtn" class="icon-button" type="button" aria-label="上个月">‹</button>
+              <strong id="currentMonthLabel"></strong>
+              <button id="nextMonthBtn" class="icon-button" type="button" aria-label="下个月">›</button>
+            </div>
+          </div>
+          <div class="calendar-weekdays">
+            <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
+          </div>
+          <div id="calendarGrid" class="calendar-grid"></div>
+        </section>
+
+        <section id="convert" class="view" aria-labelledby="convert-title">
+          <div class="toolbar">
+            <div>
+              <p class="eyebrow">Lookup</p>
+              <h2 id="convert-title">公历农历查询</h2>
+            </div>
+          </div>
+
+          <div class="converter-grid">
+            <form id="solarLookupForm" class="lookup-panel">
+              <h3>公历转农历</h3>
+              <input id="solarLookupInput" type="date" required />
+              <button class="primary" type="submit">查询</button>
+              <output id="solarLookupResult"></output>
+            </form>
+
+            <form id="lunarLookupForm" class="lookup-panel">
+              <h3>农历转公历</h3>
+              <div class="form-grid three">
+                <label>
+                  年
+                  <input id="lunarYearInput" type="number" min="1900" max="2100" required />
+                </label>
+                <label>
+                  月
+                  <select id="lunarMonthInput" required></select>
+                </label>
+                <label>
+                  日
+                  <select id="lunarDayInput" required></select>
+                </label>
+              </div>
+              <label class="checkbox-row">
+                <input id="lunarLeapInput" type="checkbox" />
+                <span>闰月</span>
+              </label>
+              <button class="primary" type="submit">查询</button>
+              <output id="lunarLookupResult"></output>
+            </form>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <template id="emptyStateTemplate">
+      <div class="empty-state">
+        <strong>还没有生日资料</strong>
+        <p>先添加一位亲友，生日提醒和月历标记会马上出现。</p>
+      </div>
+    </template>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
